@@ -1,15 +1,19 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var {ObjectID}=require('mongodb').ObjectID;
+const express = require('express');
+const bodyParser = require('body-parser');
+const {ObjectID}=require('mongodb').ObjectID;
+const _ =require('lodash');
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
 var {Stud} = require('./models/stud');
 
 var app = express();
+//const port=process.env.Port || 3000;
 
 app.use(bodyParser.json());
 
+
+//Create [todos collection]
 app.post('/todos', (req, res) => {
     var todo = new Todo({
         text: req.body.text,
@@ -24,7 +28,7 @@ app.post('/todos', (req, res) => {
     });
 });
 
-
+//find all records [todos collection]
 app.get('/todos',(req,res)=>{
     Todo.find().then((todos)=>{
         res.send({todos});
@@ -33,6 +37,7 @@ app.get('/todos',(req,res)=>{
     });
 });
 
+//Create
 
 app.post('/studs',(req,res)=>{
     var stud=new Stud({
@@ -46,6 +51,7 @@ app.post('/studs',(req,res)=>{
     })
 })
 
+//find all records
 app.get('/studs',(req,res)=>{
     Stud.find().then((docs)=>{
         res.send({docs});
@@ -53,6 +59,9 @@ app.get('/studs',(req,res)=>{
         res.status(400).send(e);
     })
 });
+
+
+//Find record by Id [todos collection]
 
 app.get('/todos/:id',(req,res)=>{
 
@@ -66,10 +75,46 @@ app.get('/todos/:id',(req,res)=>{
     Todo.findById(id).then((docs)=>{
         res.send({docs});
     },(e)=>{
-        res.status(404).send(e);
+        res.status(404).send();
     });
 
 });
+
+//Delete [todos collection]
+
+app.delete('/todos/:id', (req, res) => {
+    var id = req.params.id;
+
+    Todo.findByIdAndRemove(id).then((docs) => {
+        res.send(docs);
+    },(e)=>{
+       res.status(400).send(e);
+    });
+});
+
+//Edit [todos collection]
+
+app.patch('/todos/:id', (req, res) => {
+    var id = req.params.id;
+    var body = _.pick(req.body, ['text', 'completed']);
+
+    if (_.isBoolean(body.completed) && body.completed) {
+        body.completedAt = new Date().getTime();
+    } else {
+        body.completed = false;
+        body.completedAt = null;
+    }
+
+    Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+        if (!todo) {
+            return res.status(404).send();
+        }
+        res.send({todo});
+    }).catch((e) => {
+        res.status(400).send();
+    })
+});
+
 
 app.listen(3000, () => {
     console.log('Started on port 3000');
