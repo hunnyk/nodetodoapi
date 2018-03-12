@@ -37,29 +37,6 @@ app.get('/todos',(req,res)=>{
     });
 });
 
-//Create
-
-app.post('/studs',(req,res)=>{
-    var stud=new Stud({
-        email:req.body.email
-    });
-
-    stud.save().then((doc)=>{
-        res.send(doc);
-    },(e)=>{
-        res.status(400).send(e);
-    })
-})
-
-//find all records
-app.get('/studs',(req,res)=>{
-    Stud.find().then((docs)=>{
-        res.send({docs});
-    },(e)=>{
-        res.status(400).send(e);
-    })
-});
-
 
 //Find record by Id [todos collection]
 
@@ -112,6 +89,30 @@ app.patch('/todos/:id', (req, res) => {
         res.send({todo});
     }).catch((e) => {
         res.status(400).send();
+    })
+});
+
+//[B]
+
+//Create
+
+app.post('/studs',(req,res)=>{
+    var body=_.pick(req.body,['email','password']);
+    var stud=new Stud(body);
+
+    stud.save().then((doc)=>{
+        res.send(doc);
+    },(e)=>{
+        res.status(400).send(e);
+    })
+})
+
+//find all records
+app.get('/studs',(req,res)=>{
+    Stud.find().then((docs)=>{
+        res.send({docs});
+    },(e)=>{
+        res.status(400).send(e);
     })
 });
 
